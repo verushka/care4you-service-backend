@@ -1,11 +1,16 @@
 package com.lego.care4you.service;
 
+import com.lego.care4you.domain.Ability;
 import com.lego.care4you.domain.Position;
+import com.lego.care4you.domain.SafetyEquipment;
 import com.lego.care4you.dto.PositionRequestDTO;
+import com.lego.care4you.repository.AbilityRepository;
 import com.lego.care4you.repository.PositionRepository;
+import com.lego.care4you.repository.SafetyEquipmentRepository;
 import com.lego.care4you.service.bootstrap.GenericService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -14,8 +19,14 @@ public class PositionService extends GenericService<Position, PositionRequestDTO
 
     private PositionRepository positionRepository;
 
-    public PositionService(PositionRepository positionRepository) {
+    private AbilityRepository abilityRepository;
+
+    private SafetyEquipmentRepository safetyEquipmentRepository;
+
+    public PositionService(PositionRepository positionRepository, AbilityRepository abilityRepository, SafetyEquipmentRepository safetyEquipmentRepository) {
         this.positionRepository = positionRepository;
+        this.abilityRepository = abilityRepository;
+        this.safetyEquipmentRepository = safetyEquipmentRepository;
     }
 
     @Override
@@ -55,16 +66,38 @@ public class PositionService extends GenericService<Position, PositionRequestDTO
 
     private Position buildCreatePosition(PositionRequestDTO dto) {
         Position position = new Position();
-        position.setCode(dto.getCode());
-        position.setName(dto.getName());
-        position.setDescription(dto.getDescription());
+        setPositionInformation(dto, position);
 
         return position;
     }
 
     private void buildUpdatePosition(Position position, PositionRequestDTO dto) {
+        setPositionInformation(dto, position);
+    }
+
+    private void setPositionInformation(PositionRequestDTO dto, Position position) {
         position.setCode(dto.getCode());
         position.setName(dto.getName());
         position.setDescription(dto.getDescription());
+        position.setAbilities(getAbilities(dto.getAbilitiesId()));
+        position.setEquipments(getEquipments(dto.getEquipmentsId()));
+    }
+
+    private List<Ability> getAbilities(List<String> abilities) {
+        List<Ability> response = new ArrayList<>();
+
+        for (String abilityId : abilities) {
+            response.add(abilityRepository.findOne(abilityId));
+        }
+        return response;
+    }
+
+    private List<SafetyEquipment> getEquipments(List<String> equipments) {
+        List<SafetyEquipment> response = new ArrayList<>();
+
+        for (String equipmentId : equipments) {
+            response.add(safetyEquipmentRepository.findOne(equipmentId));
+        }
+        return response;
     }
 }
